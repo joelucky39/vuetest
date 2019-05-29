@@ -8,6 +8,10 @@
 		[v-cloak]{
 			display: none;
 		}
+		.highlight{
+			border: 2px solid red;
+			color: red;
+		}
 	</style>
 </head>
 <body>
@@ -29,7 +33,11 @@
 	<div class="container">
 		<div class="card mt-5">
 			<h2 class="card-header">Near Earth Objects</h2>
-			<table class="table">
+			<div class="m-3" v-cloak v-if="numAsteroids > 0">
+				<p>showing {{numAsteroids}} items</p>
+				<p>{{closestObject}} has the shortest miss distance.</p>
+			</div>
+			<table class="table table-striped" :class="[{'table-dark': false}, 'table-bordered']">
 				<thead class="thead-light">
 					<th>#</th>
 					<th>Name</th>
@@ -38,7 +46,12 @@
 					<th></th>
 				</thead>
 				<tbody v-cloak>
-					<tr v-for="(a, index) in asteroids" v-bind:key="a.neo_reference_id">
+					<!-- 
+					<tr v-for="(a, index) in asteroids" v-bind:key="a.neo_reference_id" 
+					:style="[getRowStyle(a),{color: 'blue'}]" style="color: green;">
+					-->
+					<tr v-for="(a, index) in asteroids" v-bind:key="a.neo_reference_id"
+					:class="{highlight: isMissingData(a)}, 'shadow-sm': true">
 						<td>{{index + 1}}</td>
 						<td>{{a.name}}</td>
 						<td>{{getCloseApprochDate(a)}}</td>
@@ -83,6 +96,23 @@
 				this.txt = `it changed to ${newHeight} from ${oldHeight}`;
 			}
 		},
+		computed: {
+			numAsteroids: function(){
+				return this.asteroids.length;
+			},
+			closestObject: function(){
+				var neosHavingData = this.asteroids.filter(function(neo){
+					return neo.close_approach_data.length > 0;
+				});
+				var simpleNeos = neosHavingData.map(function(neo){
+					return {name: neo.name, miles: neo.close_approach_data[0].miss_distance.miles};
+				});
+				var sortedNeos = simpleNeos.sort(function (a,b){
+					return a.miles - b.miles;
+				});
+				return sortedNeos[0].name;
+			},
+		},
 		mounted() { 
 			this.$nextTick(() => { 
 				window.addEventListener('resize', () => { 
@@ -126,7 +156,18 @@
 			},
 			remove: function(index){
 				this.asteroids.splice(index, 1);
-			}
+			},
+			getRowStyle: function (a) {
+				if(a.close_approach_data.length == 0) {
+					return {
+						border: '2px solid red',
+						color: 'red',
+					}
+				}
+			},
+			isMissingData: function(a) {
+				return a.close_approach_data.length == 0;
+			},
 		}
 	});
 	
