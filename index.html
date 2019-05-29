@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Vue Example</title>
+	<meta name="generator" content="BBEdit 12.6" />
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+	<style>
+		[v-cloak]{
+			display: none;
+		}
+	</style>
+</head>
+<body>
+<div id="app">
+	<h1 v-cloak>{{greeting}}</h1>
+	<img v-bind:src="imgSrc" v-bind:title="imgTitle" v-bind:width="imgWidth" v-bind:alt="imgAlt">
+	<p v-cloak>{{imgExplanation}}</p>
+	<div class="container">
+		<form v-if="!submitted" class="mt-5">
+			<div class="form-group">
+				<label for="email">Email</lable>
+				<input type="email" v-model="email" class="form-control form-control-lg">
+			</div>
+			<!--button type="submit" v-on:click.prevent="process" class="btn btn-primary">Submit</button-->
+			<button type="submit" @click.prevent="process" class="btn btn-primary">Submit</button>
+		</form>
+		<h2 v-else v-cloak class="mt-5">Thank You For Your Submission</h2>
+	</div>
+	<div class="container">
+		<div class="card mt-5">
+			<h2 class="card-header">Near Earth Objects</h2>
+			<table class="table">
+				<thead class="thead-light">
+					<th>#</th>
+					<th>Name</th>
+					<th>Close Approach Date</th>
+					<th>Miss Distance</th>
+					<th></th>
+				</thead>
+				<tbody v-cloak>
+					<tr v-for="(a, index) in asteroids" v-bind:key="a.neo_reference_id">
+						<td>{{index + 1}}</td>
+						<td>{{a.name}}</td>
+						<td>{{getCloseApprochDate(a)}}</td>
+						<td>
+							<ul v-if="a.close_approach_data.length > 0">
+								<li v-for="(value,key) in a.close_approach_data[0].miss_distance">{{key}}: {{value}}</li>
+							</ul>
+						</td>
+						<td><button @click="remove(index)" class="btn btn-warning">remove</button></td>
+					</tr>
+				</tbody>
+			</table>
+
+		</div>
+	</div>
+	<br> Window height: {{ windowHeight }} <br/>
+  	{{ txt }}
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+	
+	var vm = new Vue({
+		el:'#app',
+		data:{
+			greeting: "Hello from Vue",
+			email: "mike@example.com",
+			submitted: false,
+			imgSrc:"",
+			imgTitle:"",
+			imgWidth:"",
+			imgAlt:"",
+			imgExplanation:"",
+			asteroids: [],
+			nasaApiKey: "zKTI2YvT8OWprccLkwfLVOuiczBBpyHOWlgcmULo",
+			windowHeight: window.innerHeight,
+			txt: '',
+		},
+		watch: {
+				windowHeight(newHeight, oldHeight) {
+				this.txt = `it changed to ${newHeight} from ${oldHeight}`;
+			}
+		},
+		mounted() { 
+			this.$nextTick(() => { 
+				window.addEventListener('resize', () => { 
+					this.windowHeight = window.innerHeight 
+				}); 
+			}) 
+		},
+		created: function(){
+			this.fetchApod();
+			this.fetchAstroids();
+		},
+		methods:{
+			process: function(event){
+				event.preventDefault();
+				//alert("Submited "+this.email);
+				this.submitted=true;
+			},
+			fetchApod: function(event){
+				var url = "https://api.nasa.gov/planetary/apod?api_key="+this.nasaApiKey;
+				axios.get(url).then(function(res){
+					vm.imgSrc = res.data.url;
+					vm.imgTitle = res.data.title;
+					vm.imgWidth = "200";
+					vm.imgAlt = res.data.title;
+					vm.imgExplanation = res.data.explanation;
+					console.log(res);
+				});
+			},
+			fetchAstroids: function(event){
+				var url = "https://api.nasa.gov/neo/rest/v1/neo/browse?api_key="+this.nasaApiKey;
+				axios.get(url).then(function(res){
+					vm.asteroids = res.data.near_earth_objects.slice(0,10);
+					console.log(res);
+				});
+			},
+			getCloseApprochDate: function(a){
+				if(a.close_approach_data.length > 0){
+					return a.close_approach_data[0].close_approach_date;
+				}
+				return "N/A";
+			},
+			remove: function(index){
+				this.asteroids.splice(index, 1);
+			}
+		}
+	});
+	
+	
+</script>
+</body>
+</html>
