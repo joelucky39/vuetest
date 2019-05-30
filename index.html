@@ -51,7 +51,7 @@
 					:style="[getRowStyle(a),{color: 'blue'}]" style="color: green;">
 					-->
 					<tr v-for="(a, index) in asteroids" v-bind:key="a.neo_reference_id"
-					:class="{highlight: isMissingData(a)}, 'shadow-sm': true">
+					:class="{highlight: isMissingData(a)}">
 						<td>{{index + 1}}</td>
 						<td>{{a.name}}</td>
 						<td>{{getCloseApprochDate(a)}}</td>
@@ -144,7 +144,8 @@
 			fetchAstroids: function(event){
 				var url = "https://api.nasa.gov/neo/rest/v1/neo/browse?api_key="+this.nasaApiKey;
 				axios.get(url).then(function(res){
-					vm.asteroids = res.data.near_earth_objects.slice(0,10);
+					console.log(res);
+					vm.asteroids = res.data.near_earth_objects.slice(0,20);
 					console.log(res);
 				});
 			},
