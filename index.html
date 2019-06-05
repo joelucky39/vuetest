@@ -17,11 +17,41 @@
 			border-radius: 3px;
 			width: 300px;
 		}
+		.shooting-star-leave-to, .shooting-star-enter{
+			transform: translatex(150px) rotate(30deg);
+			opacity: 0;
+		}
+		.shooting-star-enter-active, .shooting-star-leave-active{
+			transition: all .5s ease;
+		}
+		.neo-list-leave-to, .neo-list-enter{
+			opacity: 0;
+			transform: trnaslateY(30px);
+		}
+		.neo-list-enter-active, .neo-list-leave-active{
+			transition: all 1s linear;
+		}
+		.spin-enter-active{
+			animation: spin-steps 2s;
+		}
+		@keyframes spin-steps{
+			0%{
+				transform: scale(1) rotation(0);
+			}
+			50%{
+				transform: scale(10) rotation(360deg);
+			}
+			100%{
+				transform: scale(1) rotation(1080deg);
+			}
+		}
 	</style>
 </head>
 <body>
 <div id="app">
 	<h1 v-cloak>{{greeting}}</h1>
+	<another-component></another-component>
+	<my-component sku="993943" v-for="(i, index) in 5"></my-component>
 	<img v-bind:src="imgSrc" v-bind:title="imgTitle" v-bind:width="imgWidth" v-bind:alt="imgAlt">
 	<p v-cloak>{{imgExplanation}}</p>
 	<div class="container">
@@ -55,10 +85,20 @@
 	</div>
 	<div class="container">
 		<div class="card mt-5">
-			<h2 class="card-header">Near Earth Objects</h2>
-			<div class="m-3" v-cloak v-if="numAsteroids > 0">
-				<p>showing {{numAsteroids}} items</p>
-				<p>{{closestObject}} has the shortest miss distance.</p>
+			<h2 class="card-header">
+				Near Earth 
+				<transition name="spin" appear>
+					<span style="display:inline-block;">Objects</span>
+				</transition>
+			</h2>
+			<transition name="shooting-star">
+				<div class="m-3" v-cloak v-if="numAsteroids > 0 && showSummary">
+					<p>showing {{numAsteroids}} items</p>
+					<p>{{closestObject}} has the shortest miss distance.</p>
+				</div>
+			</transition>
+			<div class="m-3">
+				<a href="#" @click="showSummary = !showSummary">Show/hide summary</a>
 			</div>
 			<table class="table table-striped" :class="[{'table-dark': false}, 'table-bordered']">
 				<thead class="thead-light">
@@ -68,11 +108,12 @@
 					<th>Miss Distance</th>
 					<th></th>
 				</thead>
-				<tbody v-cloak>
+
 					<!-- 
 					<tr v-for="(a, index) in asteroids" v-bind:key="a.neo_reference_id" 
 					:style="[getRowStyle(a),{color: 'blue'}]" style="color: green;">
 					-->
+				<tbody is="transition-group" tag="tbody" name="neo-list" v-cloak>
 					<tr v-for="(a, index) in asteroids" v-bind:key="a.neo_reference_id"
 					:class="{highlight: isMissingData(a)}">
 						<td>{{index + 1}}</td>
@@ -101,11 +142,29 @@
 <script src="https://unpkg.com/vue"></script>
 <script src="https://unpkg.com/vuejs-datepicker"></script>
 <script>
+	var anotherComponent = {
+		template: '<h1>{{msg}}</h1>',
+		data: function (){
+			return{
+				msg: "Welcome to Vue Components"
+			}
+		}
+	}
+	
+	Vue.component('my-component', {
+		template: '<div>Component Code - {{num}} - {{sku}} - {{index}}</div>',
+		props: ['sku'],
+		data: function() {
+			return {
+				num: '23920'
+			}
+		},
+	});
 	
 	var vm = new Vue({
 		el:'#app',
 		data:{
-			greeting: "Hello from Vue",
+			greeting: "Vue.js Example Code",
 			email: "mike@example.com",
 			date: "Day Month Year",
 			selectedOptions: "",
@@ -118,10 +177,12 @@
 			asteroids: [],
 			nasaApiKey: "zKTI2YvT8OWprccLkwfLVOuiczBBpyHOWlgcmULo",
 			windowHeight: window.innerHeight,
-			txt: ''
+			txt: '',
+			showSummary: true,
 		},
-			components: {
-				vuejsDatepicker
+		components: {
+			vuejsDatepicker,
+			'another-component': anotherComponent,
 		},
 		watch: {
 				windowHeight(newHeight, oldHeight) {
@@ -193,7 +254,7 @@
 				var url = "https://api.nasa.gov/neo/rest/v1/neo/browse?api_key="+this.nasaApiKey;
 				axios.get(url).then(function(res){
 					console.log(res);
-					vm.asteroids = res.data.near_earth_objects.slice(0,20);
+					vm.asteroids = res.data.near_earth_objects.slice(0,13);
 					console.log(res);
 				});
 			},
