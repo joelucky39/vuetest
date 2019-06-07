@@ -49,11 +49,18 @@
 </head>
 <body>
 <div id="app">
-	<h1 v-cloak>{{greeting}}</h1>
-	<another-component></another-component>
-	<my-component sku="993943" v-for="(i, index) in 5"></my-component>
-	<img v-bind:src="imgSrc" v-bind:title="imgTitle" v-bind:width="imgWidth" v-bind:alt="imgAlt">
-	<p v-cloak>{{imgExplanation}}</p>
+	
+	<div class="container">
+		<h1 v-cloak>{{greeting}}</h1>
+		
+		<another-component></another-component>
+		
+		<my-component sku="993943" v-for="(i, index) in 5" example="550232"></my-component>
+		
+		<img v-bind:src="imgSrc" v-bind:title="imgTitle" v-bind:width="imgWidth" v-bind:alt="imgAlt">
+		<p v-cloak>{{imgExplanation}}</p>
+		
+	</div>
 	<div class="container">
 		<form v-if="!submitted" class="mt-5">
 			<div class="form-group">
@@ -133,15 +140,78 @@
 		<div class="mt-6">
 		</div>
 	</div>
-	<br> Window height: {{ windowHeight }} <br/>
-  	{{ txt }}
-
+	
+	<div class="container">
+		<a-pod>
+			<h3 slot="title">#1</h3>
+			<p slot="caption">Here's the pic of the day</p>
+		</a-pod>
+		<a-pod date="2018-08-07">
+			<h3 slot="title">#2</h3>
+			<p slot="caption" slot-scope="pic">Here's the pic from {{pic.date}}</p>
+		</a-pod>
+		<a-pod date="2008-08-07"></a-pod>
+		<div v-for="(i, index) in 3">
+			<a-pod date="2008-08-01" title="#0">
+				<h3 slot="title" slot-scope="pic">{{pic.title}}</h3>
+				<p slot="caption" slot-scope="pic">Here's the pic from {{pic.date}}</p>
+			</a-pod>
+		</div>
+	</div>
+	
+	<div class="container">
+		<br> Window height: {{ windowHeight }} <br/>
+  		{{ txt }}
+	</div>
 </div>
+
+<!-- ======================================================================================================================================================= -->
+<!-- ========================================================  SCRIPTS  ==================================================================================== -->
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script src="https://unpkg.com/vue"></script>
 <script src="https://unpkg.com/vuejs-datepicker"></script>
 <script>
+	Vue.component("a-pod",{
+		template: '<div>'+
+				'<slot name="title" :title="imgTitle2"><h3>Title</h3></slot>'+
+				'<img v-bind:src="imgSrc2" v-bind:title="imgTitle2" v-bind:width="imgWidth2" v-bind:alt="imgAlt2">'+
+				'<slot name="caption" :date="date"><p>Unknown date</p></slot>'+
+				'</div>',
+		props: ['date'],
+		data: function (){
+			return{
+				imgSrc2: '',
+				imgTitle2: '',
+				imgWidth2:"",
+				imgAlt2:"",
+				imgExplanation2:"",
+				nasaApiKey: "zKTI2YvT8OWprccLkwfLVOuiczBBpyHOWlgcmULo",
+			}
+		},
+		created:function(){
+			this.fetchApod2();
+		},
+		methods:{
+			fetchApod2: function(event){
+				var url = "https://api.nasa.gov/planetary/apod?api_key="+this.nasaApiKey;
+				if(this.date){
+					url += "&date=" + this.date;
+				}
+				var self = this;
+				axios.get(url).then(function(res){
+					self.imgSrc2 = res.data.url;
+					self.imgTitle2 = res.data.title;
+					self.imgWidth2 = "200";
+					self.imgAlt2 = res.data.title;
+					self.imgExplanation2 = res.data.explanation;
+					console.log(res);
+				});
+			},
+		},
+	});
+
+
 	var anotherComponent = {
 		template: '<h1>{{msg}}</h1>',
 		data: function (){
@@ -152,11 +222,11 @@
 	}
 	
 	Vue.component('my-component', {
-		template: '<div>Component Code - {{num}} - {{sku}} - {{index}}</div>',
-		props: ['sku'],
+		template: '<div>Component Code - {{num}} - {{sku}} - {{example}}</div>',
+		props: ['sku','example'],
 		data: function() {
 			return {
-				num: '23920'
+				num: '23920',
 			}
 		},
 	});
